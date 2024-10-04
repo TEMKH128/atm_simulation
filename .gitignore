@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Text File ###
+atm_simulation.txt

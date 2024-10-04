@@ -16,10 +16,12 @@ import tebogomkhize.projects.atmsimulation.account.respository.AccountRepository
 @Service
 public class AccountService {
     AccountRepository accRepo;
+    EmailService emailService;
 
     @Autowired
-    public AccountService(AccountRepository accRepo) {
+    public AccountService(AccountRepository accRepo, EmailService emailService) {
         this.accRepo = accRepo;
+        this.emailService = emailService;
     }
 
     /**
@@ -40,6 +42,8 @@ public class AccountService {
         String accNum = generateUniqueAccNum();
         Account newAcc = createNewAcc(accNum, name, age, email);
         this.accRepo.save(newAcc);
+
+        sendEmail(newAcc);
 
         List<Object> data = new ArrayList<>();
         data.add(newAcc);
@@ -105,5 +109,18 @@ public class AccountService {
         int openingBal = 0;
 
         return new Account(name, age, email, accNum, pin, openingBal);
+    }
+
+    public void sendEmail(Account account) {
+        String subject = "New Account Details";
+
+        String emailBody = "Good Day.\n\n" +
+            "Please keep note of following details:\n\n" +
+            "* Account Number: " + account.getAccountNum() +
+            "\n* Account Pin: " + account.getPin() +
+            "\n\nKind Regards.";
+
+        this.emailService.sendEmail(
+            account.getEmail(), subject, emailBody);
     }
 }
