@@ -1,38 +1,47 @@
 package tebogomkhize.projects.atmsimulation.account.model;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+
 
 @Entity
 public class Account {
-    String age;
+    int age;
+
     String pin;
-    String name;
+
     String email;
+
     float balance;
+
+    String lastName;
+
+    String firstName;
+
     @Id
     String accountNum;
 
     public Account() {}
 
     public Account(
-        String name, String age, String email, String accountNum,
-        String pin, float balance) {
+        String firstName, String lastName, int age, String email,
+        String accountNum, String pin, float balance) {
 
         this.pin = pin;
         this.age = age;
-        this.name = name;
-        this.email = email;
+        this.email = email.trim();
         this.balance = balance;
         this.accountNum = accountNum;
+        this.lastName = lastName.trim();
+        this.firstName = firstName.trim();
     }
 
     // Getters and Setters
-    public String getAge() {
+    public int getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(int age) {
         this.age = age;
     }
 
@@ -44,12 +53,20 @@ public class Account {
         this.pin = pin;
     }
 
-    public String getName() {
-        return name;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public String getEmail() {

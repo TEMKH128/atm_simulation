@@ -2,31 +2,43 @@ package tebogomkhize.projects.atmsimulation.account.model.dto;
 
 
 public class AccountDTO {
-    String age;
-    String name;
+    int age;
     String email;
+    String firstName;
+    String lastName;
 
-    public AccountDTO(String age, String name, String email) {
+    public AccountDTO(
+        int age, String firstName, String lastName, String email) {
+
         this.age = age;
-        this.name = name;
         this.email = email;
+        this.lastName = lastName;
+        this.firstName = firstName;
     }
 
     // Getters and Setters.
-    public String getAge() {
+    public int getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(int age) {
         this.age = age;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {

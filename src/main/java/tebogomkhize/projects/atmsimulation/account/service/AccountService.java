@@ -1,9 +1,6 @@
 package tebogomkhize.projects.atmsimulation.account.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,25 +25,30 @@ public class AccountService {
      * Attempts to create an account (New users) with provided details.
      * Verifies that user with provided details doesn't already exist before
      * creation of account.
-     * @param name name of potential account-holder.
+     * @param firstName First name of potential account-holder.
+     * @param lastName Last name of potential account-holder.
      * @param age age of potential account-holder.
      * @param email email of potential account-holder.
      * @return ResponseDTO reflecting outcome of account creation attempt.
      */
-    public ResponseDTO createAccount(String name, String age, String email) {
-        if (doesAccountExist(name, age, email)) {
+    public ResponseDTO createAccount(
+        String firstName, String lastName, int age, String email) {
+
+        if (doesAccountExist(firstName.trim(), lastName.trim(), age,
+            email.trim())) {
+
             return new ResponseDTO("ERROR", "Account with provided details " +
-                "(name, age and email) already exists", new ArrayList<>());
+                "(name, age and email) already exists", new HashMap<>());
         }
 
         String accNum = generateUniqueAccNum();
-        Account newAcc = createNewAcc(accNum, name, age, email);
+        Account newAcc = createNewAcc(accNum, firstName, lastName, age, email);
         this.accRepo.save(newAcc);
 
         sendEmail(newAcc);
 
-        List<Object> data = new ArrayList<>();
-        data.add(newAcc);
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("account", newAcc);
 
         return new ResponseDTO(
             "OK", "New account created. Take note of account number and pin.",
@@ -55,14 +57,26 @@ public class AccountService {
 
     /**
      * Determines whether an account with provided details already exists.
-     * @param name name of potential account holder.
+     * @param firstName First name of potential account holder.
+     * @param lastName Last name of potential account holder.
      * @param age age of potential account holder.
      * @param email email of potential account holder.
      * @return boolean reflecting whether accounts exists or not.
      */
-    public boolean doesAccountExist(String name, String age, String email) {
-        return this.accRepo.findByNameAndAgeAndEmail(
-            name, age, email).isPresent();
+    public boolean doesAccountExist(
+        String firstName, String lastName, int age, String email) {
+
+        return this.accRepo.findByFirstNameAndLastNameAndAgeAndEmail(
+            firstName, lastName, age, email).isPresent();
+    }
+
+    /**
+     * Determines whether an account with provided account number exists.
+     * @param accountNum account number to be checked.
+     * @return boolean reflecting whether account exists or not.
+     */
+    public boolean doesAccountExist(String accountNum) {
+        return this.accRepo.findById(accountNum).isPresent();
     }
 
     /**
@@ -99,16 +113,21 @@ public class AccountService {
     /**
      * Creates a new account with provided details (arguments passed).
      * @param accNum Unique account number for account to be created.
-     * @param name Name of account holder.
+     * @param firstName First name of account holder.
+     * @param lastName Last name of account holder.
      * @param age Age of account holder.
      * @param email Email of account holder.
      * @return Returns newly created account.
      */
-    public Account createNewAcc(String accNum, String name, String age, String email) {
+    public Account createNewAcc(
+        String accNum, String firstName, String lastName,
+        int age, String email) {
+
         String pin = generateAccPinNum(4);
         int openingBal = 0;
 
-        return new Account(name, age, email, accNum, pin, openingBal);
+        return new Account(firstName, lastName, age, email,
+            accNum, pin, openingBal);
     }
 
     public void sendEmail(Account account) {
@@ -122,5 +141,26 @@ public class AccountService {
 
         this.emailService.sendEmail(
             account.getEmail(), subject, emailBody);
+    }
+
+    /**
+     * Attempts to retrieve account balance of provided account number if
+     * account exists.
+     * @param accountNum account number to check balance against.
+     * @return ResponseDTO reflecting outcome of account balance check.
+     */
+    public ResponseDTO getAccBal(String accountNum) {
+        if (! doesAccountExist(accountNum)) {
+            return new ResponseDTO("ERROR", "Account (" + accountNum +
+                    ") doesn't exist", new HashMap<>());
+        }
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("balance",
+            this.accRepo.findById(accountNum).get().getBalance());
+
+        return new ResponseDTO(
+                "OK", "Balance retrieved",
+                data);
     }
 }

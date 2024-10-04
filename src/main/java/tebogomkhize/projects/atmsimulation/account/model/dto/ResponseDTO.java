@@ -1,15 +1,16 @@
 package tebogomkhize.projects.atmsimulation.account.model.dto;
 
-import java.util.List;
+import java.util.HashMap;
+
 
 public class ResponseDTO {
     String outcome;
     String message;
-    List<Object> data;
+    HashMap<String, Object> data;
     // outcome, message, data
 
 
-    public ResponseDTO(String outcome, String message, List<Object> data) {
+    public ResponseDTO(String outcome, String message, HashMap<String, Object> data) {
         this.data = data;
         this.outcome = outcome;
         this.message = message;
@@ -32,11 +33,11 @@ public class ResponseDTO {
         this.message = message;
     }
 
-    public List<Object> getData() {
+    public HashMap<String, Object> getData() {
         return data;
     }
 
-    public void setData(List<Object> data) {
+    public void setData(HashMap<String, Object> data) {
         this.data = data;
     }
 }
