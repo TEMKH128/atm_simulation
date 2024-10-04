@@ -38,11 +38,16 @@ public class AccountService {
             email.trim())) {
 
             return new ResponseDTO("ERROR", "Account with provided details " +
-                "(name, age and email) already exists", new HashMap<>());
+                "(name and email) already exists", new HashMap<>());
+        }
+
+        if (! isPersonOldEnough(age)) {
+            return new ResponseDTO("ERROR", "Age (" + age +
+                    ") not old enough to create account", new HashMap<>());
         }
 
         String accNum = generateUniqueAccNum();
-        Account newAcc = createNewAcc(accNum, firstName, lastName, age, email);
+        Account newAcc = createNewAcc(accNum, firstName, lastName, email);
         this.accRepo.save(newAcc);
 
         sendEmail(newAcc);
@@ -56,6 +61,16 @@ public class AccountService {
     }
 
     /**
+     * Determines whether age provided is old enough (At least 18) to
+     * create an ATM account.
+     * @param age age of person to be verified.
+     * @return boolean representing outcome of age check.
+     */
+    public boolean isPersonOldEnough(int age) {
+        return age > 17;
+    }
+
+    /**
      * Determines whether an account with provided details already exists.
      * @param firstName First name of potential account holder.
      * @param lastName Last name of potential account holder.
@@ -66,8 +81,8 @@ public class AccountService {
     public boolean doesAccountExist(
         String firstName, String lastName, int age, String email) {
 
-        return this.accRepo.findByFirstNameAndLastNameAndAgeAndEmail(
-            firstName, lastName, age, email).isPresent();
+        return this.accRepo.findByFirstNameAndLastNameAndEmail(
+            firstName, lastName, email).isPresent();
     }
 
     /**
@@ -115,18 +130,16 @@ public class AccountService {
      * @param accNum Unique account number for account to be created.
      * @param firstName First name of account holder.
      * @param lastName Last name of account holder.
-     * @param age Age of account holder.
      * @param email Email of account holder.
      * @return Returns newly created account.
      */
     public Account createNewAcc(
-        String accNum, String firstName, String lastName,
-        int age, String email) {
+        String accNum, String firstName, String lastName, String email) {
 
         String pin = generateAccPinNum(4);
         int openingBal = 0;
 
-        return new Account(firstName, lastName, age, email,
+        return new Account(firstName, lastName, email,
             accNum, pin, openingBal);
     }
 

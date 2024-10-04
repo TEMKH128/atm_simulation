@@ -10,7 +10,7 @@ import tebogomkhize.projects.atmsimulation.account.model.Account;
 
 @Repository
 public interface AccountRepository extends CrudRepository <Account, String> {
-    Optional<Account> findByFirstNameAndLastNameAndAgeAndEmail(
-        String firstName, String lastName, int age, String email);
+    Optional<Account> findByFirstNameAndLastNameAndEmail(
+        String firstName, String lastName, String email);
 }
 

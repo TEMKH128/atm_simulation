@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 
 @Entity
 public class Account {
-    int age;
 
     String pin;
 
@@ -24,11 +23,10 @@ public class Account {
     public Account() {}
 
     public Account(
-        String firstName, String lastName, int age, String email,
+        String firstName, String lastName, String email,
         String accountNum, String pin, float balance) {
 
         this.pin = pin;
-        this.age = age;
         this.email = email.trim();
         this.balance = balance;
         this.accountNum = accountNum;
@@ -37,14 +35,6 @@ public class Account {
     }
 
     // Getters and Setters
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
     public String getPin() {
         return pin;
     }
