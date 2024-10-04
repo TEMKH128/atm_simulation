@@ -160,7 +160,30 @@ public class AccountService {
             this.accRepo.findById(accountNum).get().getBalance());
 
         return new ResponseDTO(
-                "OK", "Balance retrieved",
-                data);
+                "OK", "Balance retrieved", data);
+    }
+
+    /**
+     * Deposit specified amount into account if account exists.
+     * @param accountNum account number where amount will be deposited.
+     * @param amount amount to be deposited into account.
+     * @return ResponseDTO reflecting outcome of attempted deposit into account.
+     */
+    public ResponseDTO depositMoney(String accountNum, float amount) {
+        if (! doesAccountExist(accountNum)) {
+            return new ResponseDTO("ERROR", "Account (" + accountNum +
+                    ") doesn't exist", new HashMap<>());
+        }
+
+        Account account = this.accRepo.findById(accountNum).get();
+        account.setBalance(account.getBalance() + amount);
+        this.accRepo.save(account);
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("balance",
+            this.accRepo.findById(accountNum).get().getBalance());
+
+        return new ResponseDTO(
+            "OK", "Amount (" + amount + ") deposited", data);
     }
 }

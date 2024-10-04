@@ -30,5 +30,12 @@ public class AccountController {
         return this.accService.getAccBal(accountNum);
     }
 
+    @PutMapping("/account/{accountNum}/deposit/{amount}")
+    public ResponseDTO depositMoney(
+        @PathVariable String accountNum, @PathVariable float amount) {
+
+        return this.accService.depositMoney(accountNum, amount);
+    }
+
 
 }
