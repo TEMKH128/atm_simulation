@@ -50,7 +50,7 @@ public class AccountService {
         Account newAcc = createNewAcc(accNum, firstName, lastName, email);
         this.accRepo.save(newAcc);
 
-        sendEmail(newAcc);
+        this.emailService.newAccEmail(accNum, newAcc.getPin(), email);
 
         HashMap<String, Object> data = new HashMap<>();
         data.put("account", newAcc);
@@ -140,19 +140,6 @@ public class AccountService {
 
         return new Account(firstName, lastName, email,
             accNum, pin, openingBal);
-    }
-
-    public void sendEmail(Account account) {
-        String subject = "New Account Details";
-
-        String emailBody = "Good Day.\n\n" +
-            "Please keep note of following details:\n\n" +
-            "* Account Number: " + account.getAccountNum() +
-            "\n* Account Pin: " + account.getPin() +
-            "\n\nKind Regards.";
-
-        this.emailService.sendEmail(
-            account.getEmail(), subject, emailBody);
     }
 
     /**
@@ -256,4 +243,45 @@ public class AccountService {
         float balance = this.accRepo.findById(accountNum).get().getBalance();
         return (balance - amount) > 0;
     }
+
+    /**
+     * Attempt to transfer amount, provided that originating and destination
+     * account exist and amount will not place account into overdraft.
+     * @param accountNum account number of of originating account.
+     * @param transferAcc account number of destination account (Receiver).
+     * @param amount amount to be transferred.
+     * @return Response DTO reflecting transaction attempt outcome.
+     */
+    public ResponseDTO transferMoney(
+        String accountNum, String transferAcc, float amount) {
+
+        if (! (doesAccountExist(accountNum) && doesAccountExist(transferAcc))) {
+            return new ResponseDTO("ERROR", "Account (" + accountNum +
+                ") or Transfer Account (" + transferAcc +
+                ") doesn't exist", new HashMap<>());
+        }
+
+        if (! isWithdrawPossible(accountNum, amount)) {
+            return new ResponseDTO("ERROR", "Transfer amount (" + amount +
+                ") makes account negative", new HashMap<>());
+        }
+
+        addSubtractBal(accountNum, amount, false);
+        addSubtractBal(transferAcc, amount, true);
+
+        this.emailService.transferReceiverEmail(this.accRepo.findById(
+            transferAcc).get().getEmail(), this.accRepo.findById(
+            accountNum).get().getEmail(), accountNum,amount);
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("balance",
+                this.accRepo.findById(accountNum).get().getBalance());
+
+        return new ResponseDTO(
+            "OK", "Amount (" + amount + ") transferred to account (" +
+            transferAcc + ")", data);
+    }
 }
+
+// 25 - 091367
+// 01 - 250030
