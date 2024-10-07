@@ -10,5 +10,4 @@ public class AtmSimulationApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AtmSimulationApplication.class, args);
 	}
-
 }

@@ -37,5 +37,11 @@ public class AccountController {
         return this.accService.depositMoney(accountNum, amount);
     }
 
+    @PutMapping("/account/{accountNum}/withdraw/{amount}")
+    public ResponseDTO withdrawMoney(
+        @PathVariable String accountNum, @PathVariable float amount) {
+
+        return this.accService.withdrawMoney(accountNum, amount);
+    }
 
 }

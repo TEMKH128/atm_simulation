@@ -34,7 +34,7 @@ public class AccountService {
     public ResponseDTO createAccount(
         String firstName, String lastName, int age, String email) {
 
-        if (doesAccountExist(firstName.trim(), lastName.trim(), age,
+        if (doesAccountExist(firstName.trim(), lastName.trim(),
             email.trim())) {
 
             return new ResponseDTO("ERROR", "Account with provided details " +
@@ -74,12 +74,11 @@ public class AccountService {
      * Determines whether an account with provided details already exists.
      * @param firstName First name of potential account holder.
      * @param lastName Last name of potential account holder.
-     * @param age age of potential account holder.
      * @param email email of potential account holder.
      * @return boolean reflecting whether accounts exists or not.
      */
     public boolean doesAccountExist(
-        String firstName, String lastName, int age, String email) {
+        String firstName, String lastName, String email) {
 
         return this.accRepo.findByFirstNameAndLastNameAndEmail(
             firstName, lastName, email).isPresent();
@@ -188,9 +187,7 @@ public class AccountService {
                     ") doesn't exist", new HashMap<>());
         }
 
-        Account account = this.accRepo.findById(accountNum).get();
-        account.setBalance(account.getBalance() + amount);
-        this.accRepo.save(account);
+        addSubtractBal(accountNum, amount, true);
 
         HashMap<String, Object> data = new HashMap<>();
         data.put("balance",
@@ -198,5 +195,65 @@ public class AccountService {
 
         return new ResponseDTO(
             "OK", "Amount (" + amount + ") deposited", data);
+    }
+
+    /**
+     * Adds to (Reflects Deposits) or subtracts (Reflects Withdrawals) from
+     * account balance.
+     * @param accountNum account number where amount added/subtracted.
+     * @param amount amount to be added / subtracted.
+     * @param isAdd boolean reflecting operation (add/subtract) to take place.
+     */
+    public void addSubtractBal(String accountNum, float amount, boolean isAdd) {
+        Account account = this.accRepo.findById(accountNum).get();
+
+        if (isAdd) {
+            account.setBalance(account.getBalance() + amount);
+        } else {
+            account.setBalance(account.getBalance() - amount);
+        }
+
+        this.accRepo.save(account);
+    }
+
+    /**
+     * Withdraws specified amount into account if account exists and amount
+     * doesn't make account balance negative.
+     * @param accountNum account number where amount will be withdrawn.
+     * @param amount amount to be withdrawn from the account.
+     * @return ResponseDTO reflecting outcome of attempted withdrawal from account.
+     */
+    public ResponseDTO withdrawMoney(String accountNum, float amount) {
+        if (! doesAccountExist(accountNum)) {
+            return new ResponseDTO("ERROR", "Account (" + accountNum +
+                    ") doesn't exist", new HashMap<>());
+        }
+
+        if (! isWithdrawPossible(accountNum, amount)) {
+            return new ResponseDTO("ERROR", "Withdraw amount (" + amount +
+                ") makes account negative", new HashMap<>());
+        }
+
+        addSubtractBal(accountNum, amount, false);
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("balance",
+                this.accRepo.findById(accountNum).get().getBalance());
+
+        return new ResponseDTO(
+                "OK", "Amount (" + amount + ") withdrawn", data);
+    }
+
+
+    /**
+     * Determines whether a withdrawal is possible (i.e balance post
+     * withdrawal is above zero).
+     * @param accountNum account number where withdrawal attempt will be made.
+     * @param amount amount to be withdrawn.
+     * @return boolean reflecting whether withdrawal is possible.
+     */
+    public boolean isWithdrawPossible(String accountNum, float amount) {
+        float balance = this.accRepo.findById(accountNum).get().getBalance();
+        return (balance - amount) > 0;
     }
 }
