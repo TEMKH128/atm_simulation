@@ -1,23 +1,37 @@
 package tebogomkhize.projects.atmsimulation.account.service;
 
 import java.util.*;
+import java.time.LocalDate;
 
+import com.itextpdf.text.DocumentException;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import tebogomkhize.projects.atmsimulation.account.model.Account;
+import tebogomkhize.projects.atmsimulation.account.model.Transaction;
 import tebogomkhize.projects.atmsimulation.account.model.dto.ResponseDTO;
+import tebogomkhize.projects.atmsimulation.account.model.AccStatementDocument;
 import tebogomkhize.projects.atmsimulation.account.respository.AccountRepository;
+import tebogomkhize.projects.atmsimulation.account.respository.TransactionRepository;
 
 
 @Service
 public class AccountService {
     AccountRepository accRepo;
     EmailService emailService;
+    TransactionRepository transRepo;
 
     @Autowired
-    public AccountService(AccountRepository accRepo, EmailService emailService) {
+    public AccountService(
+        AccountRepository accRepo, TransactionRepository transRepo,
+        EmailService emailService) {
+
         this.accRepo = accRepo;
+        this.transRepo = transRepo;
         this.emailService = emailService;
     }
 
@@ -176,12 +190,25 @@ public class AccountService {
 
         addSubtractBal(accountNum, amount, true);
 
+        float postTransBal = this.accRepo.findById(accountNum).get(
+            ).getBalance();
+
         HashMap<String, Object> data = new HashMap<>();
-        data.put("balance",
-            this.accRepo.findById(accountNum).get().getBalance());
+        data.put("balance", postTransBal);
+
+        recordTransaction("deposit", accountNum, amount, postTransBal);
 
         return new ResponseDTO(
             "OK", "Amount (" + amount + ") deposited", data);
+    }
+
+    /**
+     * Records transactions of specified type into the transaction database.
+     * @param type transaction type (E.g. deposit, withdraw, etc.).
+     * @param amount amount involved in transaction.
+     */
+    public void recordTransaction(String type, String accNum, float amount, float postTransBal) {
+        this.transRepo.save(new Transaction(type, accNum, LocalDate.now(), amount, postTransBal));
     }
 
     /**
@@ -223,9 +250,13 @@ public class AccountService {
 
         addSubtractBal(accountNum, amount, false);
 
+        float postTransBal = this.accRepo.findById(accountNum).get(
+            ).getBalance();
+
         HashMap<String, Object> data = new HashMap<>();
-        data.put("balance",
-                this.accRepo.findById(accountNum).get().getBalance());
+        data.put("balance", postTransBal);
+
+        recordTransaction("withdrawal", accountNum, -(amount), postTransBal);
 
         return new ResponseDTO(
                 "OK", "Amount (" + amount + ") withdrawn", data);
@@ -255,6 +286,12 @@ public class AccountService {
     public ResponseDTO transferMoney(
         String accountNum, String transferAcc, float amount) {
 
+        if (Objects.equals(accountNum, transferAcc)) {
+            return new ResponseDTO("ERROR", "Account (" + accountNum +
+                ") is the same as the Transfer Account (" + transferAcc +
+                ")", new HashMap<>());
+        }
+
         if (! (doesAccountExist(accountNum) && doesAccountExist(transferAcc))) {
             return new ResponseDTO("ERROR", "Account (" + accountNum +
                 ") or Transfer Account (" + transferAcc +
@@ -273,15 +310,52 @@ public class AccountService {
             transferAcc).get().getEmail(), this.accRepo.findById(
             accountNum).get().getEmail(), accountNum,amount);
 
+        float postTransBal =  this.accRepo.findById(accountNum).get(
+            ).getBalance();
+
+        float postTransBalReceiver = this.accRepo.findById(transferAcc).get(
+            ).getBalance();
+
         HashMap<String, Object> data = new HashMap<>();
-        data.put("balance",
-                this.accRepo.findById(accountNum).get().getBalance());
+        data.put("balance", postTransBal);
+
+        recordTransaction("transfer", accountNum, -(amount), postTransBal);
+        recordTransaction("transfer", transferAcc, amount,
+            postTransBalReceiver);
 
         return new ResponseDTO(
             "OK", "Amount (" + amount + ") transferred to account (" +
             transferAcc + ")", data);
     }
-}
 
-// 25 - 091367
-// 01 - 250030
+    /**
+     * Retrieves a 3-month pdf statement of transactions (deposits,
+     * withdrawals, transfers).
+     * @param accountNum account holder requesting monthly statement.
+     * @return byte array representing outcome of request.
+     */
+    public ResponseEntity<byte[]> getAccStatement(String accountNum) throws DocumentException {
+        if (! doesAccountExist(accountNum)) {
+            return ResponseEntity.badRequest().body(("Account (" +
+            accountNum + ") doesn't exist").getBytes());
+        }
+
+        LocalDate currentDate = LocalDate.now();
+        LocalDate threeMonthsPrior = currentDate.minusMonths(3);
+
+        List<Transaction> transactions = this.transRepo.findByAccNumAndDateBetween(
+            accountNum, threeMonthsPrior, currentDate);
+
+        AccStatementDocument statement = new AccStatementDocument();
+        byte[] pdfBytes = statement.createStatement(accountNum,
+            threeMonthsPrior, currentDate, transactions);
+
+        String filename = accountNum + "_3_month_statement.pdf";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=" +
+            filename);
+        headers.add("Content-Type", "application/pdf");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
+}

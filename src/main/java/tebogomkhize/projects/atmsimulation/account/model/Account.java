@@ -27,8 +27,8 @@ public class Account {
         String accountNum, String pin, float balance) {
 
         this.pin = pin;
-        this.email = email.trim();
         this.balance = balance;
+        this.email = email.trim();
         this.accountNum = accountNum;
         this.lastName = lastName.trim();
         this.firstName = firstName.trim();

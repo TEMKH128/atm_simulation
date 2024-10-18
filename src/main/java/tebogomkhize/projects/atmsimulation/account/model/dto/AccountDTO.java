@@ -3,8 +3,11 @@ package tebogomkhize.projects.atmsimulation.account.model.dto;
 
 public class AccountDTO {
     int age;
+
     String email;
+
     String firstName;
+
     String lastName;
 
     public AccountDTO(

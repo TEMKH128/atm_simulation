@@ -7,8 +7,6 @@ public class ResponseDTO {
     String outcome;
     String message;
     HashMap<String, Object> data;
-    // outcome, message, data
-
 
     public ResponseDTO(String outcome, String message, HashMap<String, Object> data) {
         this.data = data;

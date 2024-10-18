@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class EmailService {
+
     private final JavaMailSender mailSender;
 
     @Autowired

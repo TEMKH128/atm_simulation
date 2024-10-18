@@ -1,12 +1,12 @@
 package tebogomkhize.projects.atmsimulation.account.model;
 
+import java.time.LocalDate;
 
+import jakarta.persistence.Id;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
-import java.time.LocalDate;
 
 @Entity
 public class Transaction {
@@ -14,18 +14,27 @@ public class Transaction {
 
     float amount;
 
+    String accNum;
+
+    LocalDate date;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int transNumber;
 
-    LocalDate transDate;
+    float postTransBal;
 
     public Transaction() {}
 
-    public Transaction(String type, LocalDate transDate, float amount) {
+    public Transaction(
+    String type, String accNum, LocalDate date,
+    float amount, float postTransBal) {
+
         this.type = type;
-        this.transDate = transDate;
+        this.date = date;
         this.amount = amount;
+        this.accNum = accNum;
+        this.postTransBal = postTransBal;
     }
 
     // Getters and Setters
@@ -37,6 +46,22 @@ public class Transaction {
         this.transNumber = transNumber;
     }
 
+    public String getAccNum() {
+        return accNum;
+    }
+
+    public void setAccNum(String accNum) {
+        this.accNum = accNum;
+    }
+
+    public float getPostTransBal() {
+        return postTransBal;
+    }
+
+    public void setPostTransBal(float postTransBal) {
+        this.postTransBal = postTransBal;
+    }
+
     public String getType() {
         return type;
     }
@@ -45,12 +70,12 @@ public class Transaction {
         this.type = type;
     }
 
-    public LocalDate getTransDate() {
-        return transDate;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setTransDate(LocalDate transDate) {
-        this.transDate = transDate;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public float getAmount() {
